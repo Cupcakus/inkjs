@@ -221,8 +221,6 @@ export class Story extends InkObject {
         JsonSerialisation.JTokenToRuntimeObject(rootToken),
         Container
       );
-
-      this.ResetState();
     }
     // ------
   }
@@ -272,7 +270,7 @@ export class Story extends InkObject {
     if (shouldReturn) return writer.toString();
   }
 
-  public ResetState() {
+  public async ResetState() {
     this.IfAsyncWeCant("ResetState");
 
     this._state = new StoryState(this);
@@ -280,7 +278,7 @@ export class Story extends InkObject {
       this.VariableStateDidChangeEvent.bind(this)
     );
 
-    this.ResetGlobals();
+    await this.ResetGlobals();
   }
 
   public ResetErrors() {
@@ -298,13 +296,13 @@ export class Story extends InkObject {
     this._state.ForceEnd();
   }
 
-  public ResetGlobals() {
+  public async ResetGlobals() {
     if (this._mainContentContainer.namedContent.get("global decl")) {
       let originalPointer = this.state.currentPointer.copy();
 
       this.ChoosePath(new Path("global decl"), false);
 
-      this.ContinueInternal();
+      await this.ContinueInternal();
 
       this.state.currentPointer = originalPointer;
     }
