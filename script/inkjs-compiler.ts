@@ -81,7 +81,7 @@ if(jsonStory && play){
 
         do{
             while(story.canContinue){
-                const text = story.Continue();
+                const text = await story.Continue();
                 process.stdout.write(text!)
                 if (story.currentTags && story.currentTags.length) {
                     process.stdout.write(" # tags: " + story.currentTags.join(", ")+ '\n')
