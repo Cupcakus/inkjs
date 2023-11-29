@@ -221,6 +221,7 @@ export class Story extends InkObject {
         JsonSerialisation.JTokenToRuntimeObject(rootToken),
         Container
       );
+
     }
     // ------
   }
@@ -1058,18 +1059,10 @@ export class Story extends InkObject {
 
       switch (evalCommand.commandType) {
         case ControlCommand.CommandType.EvalStart:
-          this.Assert(
-            this.state.inExpressionEvaluation === false,
-            "Already in expression evaluation?"
-          );
           this.state.inExpressionEvaluation = true;
           break;
 
         case ControlCommand.CommandType.EvalEnd:
-          this.Assert(
-            this.state.inExpressionEvaluation === true,
-            "Not in expression evaluation mode"
-          );
           this.state.inExpressionEvaluation = false;
           break;
 
