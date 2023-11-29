@@ -332,8 +332,8 @@ export class Story extends InkObject {
     this.state.SwitchToDefaultFlow_Internal();
   }
 
-  public Continue() {
-    this.ContinueAsync(0);
+  public async Continue() {
+    await this.ContinueAsync(0);
     return this.currentText;
   }
 
@@ -345,13 +345,13 @@ export class Story extends InkObject {
     return !this._asyncContinueActive;
   }
 
-  public ContinueAsync(millisecsLimitAsync: number) {
+  public async ContinueAsync(millisecsLimitAsync: number) {
     if (!this._hasValidatedExternals) this.ValidateExternalBindings();
 
-    this.ContinueInternal(millisecsLimitAsync);
+    await this.ContinueInternal(millisecsLimitAsync);
   }
 
-  public ContinueInternal(millisecsLimitAsync = 0) {
+  public async ContinueInternal(millisecsLimitAsync = 0) {
     if (this._profiler != null) this._profiler.PreContinue();
 
     let isAsyncTimeLimited = millisecsLimitAsync > 0;
@@ -380,7 +380,7 @@ export class Story extends InkObject {
     this._sawLookaheadUnsafeFunctionAfterNewline = false;
     do {
       try {
-        outputStreamEndsInNewline = this.ContinueSingleStep();
+        outputStreamEndsInNewline = await this.ContinueSingleStep();
       } catch (e) {
         if (!(e instanceof StoryException)) throw e;
 
@@ -496,10 +496,10 @@ export class Story extends InkObject {
     }
   }
 
-  public ContinueSingleStep() {
+  public async ContinueSingleStep() {
     if (this._profiler != null) this._profiler.PreStep();
 
-    this.Step();
+    await this.Step();
 
     if (this._profiler != null) this._profiler.PostStep();
 
@@ -592,13 +592,13 @@ export class Story extends InkObject {
     return Story.OutputStateChange.NoChange;
   }
 
-  public ContinueMaximally() {
+  public async ContinueMaximally() {
     this.IfAsyncWeCant("ContinueMaximally");
 
     let sb = new StringBuilder();
 
     while (this.canContinue) {
-      sb.Append(this.Continue());
+      sb.Append(await this.Continue());
     }
 
     return sb.toString();
@@ -709,7 +709,7 @@ export class Story extends InkObject {
     this._asyncSaving = false;
   }
 
-  public Step() {
+  public async Step() {
     let shouldAddToStream = true;
 
     let pointer = this.state.currentPointer.copy();
@@ -744,7 +744,7 @@ export class Story extends InkObject {
     // that was diverted to rather than called as a function)
     let currentContentObj = pointer.Resolve();
     let isLogicOrFlowControl =
-      this.PerformLogicAndFlowControl(currentContentObj);
+      await this.PerformLogicAndFlowControl(currentContentObj);
 
     // Has flow been forced to end by flow control above?
     if (this.state.currentPointer.isNull) {
@@ -971,7 +971,7 @@ export class Story extends InkObject {
     return truthy;
   }
 
-  public PerformLogicAndFlowControl(contentObj: InkObject | null) {
+  public async PerformLogicAndFlowControl(contentObj: InkObject | null) {
     if (contentObj == null) {
       return false;
     }
@@ -1019,7 +1019,7 @@ export class Story extends InkObject {
         let target = asOrThrows(varContents, DivertTargetValue);
         this.state.divertedPointer = this.PointerAtPath(target.targetPath);
       } else if (currentDivert.isExternal) {
-        this.CallExternalFunction(
+        await this.CallExternalFunction(
           currentDivert.targetPathString,
           currentDivert.externalArgs
         );
@@ -1742,11 +1742,11 @@ export class Story extends InkObject {
     }
   }
 
-  public EvaluateFunction(
+  public async EvaluateFunction(
     functionName: string,
     args: any[] = [],
     returnTextOutput: boolean = false
-  ): Story.EvaluateFunctionTextOutput | any {
+  ): Promise<Story.EvaluateFunctionTextOutput | any> {
     // EvaluateFunction behaves slightly differently than the C# version.
     // In C#, you can pass a (second) parameter `out textOutput` to get the
     // text outputted by the function. This is not possible in js. Instead,
@@ -1779,7 +1779,7 @@ export class Story extends InkObject {
     // Evaluate the function, and collect the string output
     let stringOutput = new StringBuilder();
     while (this.canContinue) {
-      stringOutput.Append(this.Continue());
+      stringOutput.Append(await this.Continue());
     }
     let textOutput = stringOutput.toString();
 
@@ -1824,7 +1824,7 @@ export class Story extends InkObject {
 
   public allowExternalFunctionFallbacks: boolean = false;
 
-  public CallExternalFunction(
+  public async CallExternalFunction(
     funcName: string | null,
     numberOfArguments: number
   ) {
@@ -1887,7 +1887,7 @@ export class Story extends InkObject {
     args.reverse();
 
     // Run the function!
-    let funcResult = funcDef!.function(args);
+    let funcResult = await funcDef!.function(args);
 
     // Convert return value (if any) to the a type that the ink engine can use
     let returnObj = null;
