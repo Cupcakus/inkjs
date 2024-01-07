@@ -136,6 +136,9 @@ export class Story extends InkObject {
   public onChoosePathString: ((arg1: string, arg2: any[]) => void) | null =
     null;
 
+  public onChoosePath: ((arg1: Path) => void) | null =
+    null;
+
   // TODO: Implement Profiler
   public StartProfiling() {
     /* */
@@ -1698,6 +1701,7 @@ export class Story extends InkObject {
   public ChoosePath(p: Path, incrementingTurnIndex: boolean = true) {
     this.state.SetChosenPath(p, incrementingTurnIndex);
 
+    if (this.onChoosePath) this.onChoosePath(p);
     // Take a note of newly visited containers for read counts etc
     this.VisitChangedContainersDueToDivert();
   }
